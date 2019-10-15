@@ -32,8 +32,8 @@ public class Swagger2Config
 
 	private ApiInfo apiEndPointsInfo()
 	{
-		return new ApiInfoBuilder().title("Restaurant Example")
-				.description("Restaurant Example")
+		return new ApiInfoBuilder().title("School Api")
+				.description("School Api")
 				.version("1.0.0").build();
 	}
 }
