@@ -2,11 +2,10 @@ package com.lambdaschool.school.controller;
 
 import com.lambdaschool.school.model.Student;
 import com.lambdaschool.school.service.StudentService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +33,23 @@ public class StudentController
     {
         List<Student> myStudents = studentService.findAll();
         return new ResponseEntity<>(myStudents, HttpStatus.OK);
+    }
+
+    @ApiOperation(value ="Returns all Students - With Paging Support", response = Student.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "List of Students Found", response = Student.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "List of Students Not Found")})
+    @ApiImplicitParams({ //gives swagger info on the implicit query params
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page."),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")})
+    @GetMapping(value = "/students/paging", produces = {"application/json"})
+    public ResponseEntity<?> listAllStudentsByPage(@PageableDefault(page=0, size=3) Pageable pageable){
+        return new ResponseEntity<>(studentService.findAllPageable(pageable), HttpStatus.OK);
     }
 
     @ApiOperation(value ="Returns Student Depending on StudentId", response = Student.class)
