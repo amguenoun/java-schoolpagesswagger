@@ -2,7 +2,10 @@ package com.lambdaschool.school.controller;
 
 import com.lambdaschool.school.model.Student;
 import com.lambdaschool.school.service.StudentService;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +25,9 @@ public class StudentController
     private StudentService studentService;
 
     // Please note there is no way to add students to course yet!
-
+    @ApiOperation(value ="Returns all Students", response = Student.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "List of Students Found", response = Student.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "List of Students Not Found")})
     @GetMapping(value = "/students", produces = {"application/json"})
     public ResponseEntity<?> listAllStudents()
     {
@@ -30,9 +35,30 @@ public class StudentController
         return new ResponseEntity<>(myStudents, HttpStatus.OK);
     }
 
+    @ApiOperation(value ="Returns all Students - With Paging Support", response = Student.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "List of Students Found", response = Student.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "List of Students Not Found")})
+    @ApiImplicitParams({ //gives swagger info on the implicit query params
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page."),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")})
+    @GetMapping(value = "/students/paging", produces = {"application/json"})
+    public ResponseEntity<?> listAllStudentsByPage(@PageableDefault(page=0, size=3) Pageable pageable){
+        return new ResponseEntity<>(studentService.findAllPageable(pageable), HttpStatus.OK);
+    }
+
+    @ApiOperation(value ="Returns Student Depending on StudentId", response = Student.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Student Found", response = Student.class),
+            @ApiResponse(code = 404, message = "Student Not Found")})
     @GetMapping(value = "/Student/{StudentId}",
                 produces = {"application/json"})
     public ResponseEntity<?> getStudentById(
+            @ApiParam(value = "Student Id", required = true, example = "1")
             @PathVariable
                     Long StudentId)
     {
@@ -40,10 +66,13 @@ public class StudentController
         return new ResponseEntity<>(r, HttpStatus.OK);
     }
 
-
+    @ApiOperation(value ="Returns all Students That Have Names Containing a String", response = Student.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "List of Students Found", response = Student.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "List of Students Not Found")})
     @GetMapping(value = "/student/namelike/{name}",
                 produces = {"application/json"})
     public ResponseEntity<?> getStudentByNameContaining(
+            @ApiParam(value = "Name", required = true, example = "Joe")
             @PathVariable String name)
     {
         List<Student> myStudents = studentService.findStudentByNameLike(name);
@@ -51,10 +80,15 @@ public class StudentController
     }
 
 
+    @ApiOperation(value ="Creates a Student", response = Student.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Student Created", response = Student.class),
+            @ApiResponse(code = 404, message = "Student Not Created")})
     @PostMapping(value = "/Student",
                  consumes = {"application/json"},
                  produces = {"application/json"})
-    public ResponseEntity<?> addNewStudent(@Valid
+    public ResponseEntity<?> addNewStudent(
+                                            @ApiParam(value="New Student", required = true)
+                                            @Valid
                                            @RequestBody
                                                    Student newStudent) throws URISyntaxException
     {
@@ -69,10 +103,15 @@ public class StudentController
     }
 
 
+    @ApiOperation(value ="Updates a Student", response = Student.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "List of Students Found", response = Student.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "List of Students Not Found")})
     @PutMapping(value = "/Student/{Studentid}")
     public ResponseEntity<?> updateStudent(
+            @ApiParam(value = "Updated Student Field(s)", required = true)
             @RequestBody
                     Student updateStudent,
+            @ApiParam(value = "Student Id", required = true, example = "1")
             @PathVariable
                     long Studentid)
     {
@@ -81,8 +120,12 @@ public class StudentController
     }
 
 
+    @ApiOperation(value ="Deletes a Student")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Student Deleted"),
+            @ApiResponse(code = 404, message = "Student Not Deleted")})
     @DeleteMapping("/Student/{Studentid}")
     public ResponseEntity<?> deleteStudentById(
+            @ApiParam(value = "Student Id", required = true, example = "1")
             @PathVariable
                     long Studentid)
     {
